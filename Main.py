@@ -8,7 +8,7 @@ class HopfieldNet:
     def biasFunc(updateVal):
         return 1 if updateVal > 0 else -1
 
-    def __init__(self,size):
+    def __init__(self, size):
         self.size = size
         self.weights = np.random.rand(self.size, self.size)
         self.neurons = np.zeros(self.size, 1)
@@ -18,25 +18,24 @@ class HopfieldNet:
 
     #check that an input call has been made first
     def singleIteration(self, neuronNum):
-        # temp = np.append(self.neurons[0:neuronNum], self.neurons[neuronNum+1:])
         temp = self.neurons
         temp[neuronNum] = 0
-        # updateVal = sum(self.weights[0:, neuronNum]*temp)
-        # self.neurons[neuronNum] = 1 if updateVal > 0 else -1
         self.neurons[neuronNum] = self.biasFunc(sum(self.weights[0:, neuronNum]*temp))
 
     def fullIteration(self):
-        temp = random.shuffle(np.linspace(0,self.size-1,num=self.size))
+        temp = random.shuffle(np.linspace(0, self.size-1, num=self.size))
         for idx in temp:
             self.singleIteration(idx)
 
     def learnPattern(self, pattern):
-        for outerIndex in range(0,self.size):
-            for innerIndex in range(0,self.size):
+        for outerIndex in range(0, self.size):
+            for innerIndex in range(0, self.size):
                 if outerIndex != innerIndex:
                     val = (2*pattern[outerIndex]-1)*(2*pattern[outerIndex]-1)
                     self.weights[outerIndex, innerIndex] += val
                     self.weights[innerIndex, outerIndex] += val
+                else:
+                    self.weights[outerIndex, innerIndex] = 0
 
 
 #Main
