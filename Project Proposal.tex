@@ -1,0 +1,86 @@
+\documentclass[11pt,reqno]{article}
+
+\usepackage{geometry} 
+\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{wasysym}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage[all]{xy}
+\usepackage{epstopdf}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{titlesec}
+
+\titlespacing*{\section}{0pt}{0.25\baselineskip}{0.25\baselineskip}
+
+\geometry{letterpaper}
+
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\ReF}{\operatorname{Re}}
+\newcommand{\Lap}{\mathcal{L}}
+\newcommand{\B}[1]{\boldsymbol{#1}}
+\newcommand{\p}{\text{proj}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\I}[1]{#1^\text{int}}
+\newcommand{\bnd}[1]{\partial #1}
+\newcommand{\mx}[1]{\text{max}(#1)}
+\newcommand{\mn}[1]{\text{min}(#1)}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+\newcommand{\pd}{\partial}
+\newcommand{\eval}[3]{\left.#1\right|_#2^#3}
+\newcommand{\del}[2]{\pd_{#2} #1}
+\newcommand{\delH}[3]{\pd^{#1}_{#3} #2}
+\newcommand{\Int}[2]{\int\limits_{#1}^{#2}}
+\newcommand{\IInt}[2]{\Int{}{}\!\!\!\!\Int{#1}{#2}}
+\newcommand{\IIInt}[1]{\Int{}{}\!\!\!\!\Int{}{}\!\!\!\!\Int{#1}{}}
+\newcommand{\Sum}[2]{\sum\limits_{#1}^{#2}}
+\newcommand{\Uni}[2]{\bigcup\limits_{#1}^{#2}}
+\newcommand{\VA}[3]{\left(\begin{array}{c}
+#1\\
+#2\\
+#3
+\end{array}\right)}
+\newcommand{\Hline}{\noindent\rule[0.5ex]{\linewidth}{1pt}}
+%\newcommand{\qed}{\:\:\square }
+\newcommand{\A}{\text{A}}
+\newcommand{\txtfn}[2]{\text{#1}\left(#2\right)}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\eq}{equilibrium }
+\newcommand{\Frac}[2]{\displaystyle\frac{#1}{#2}}
+\newcommand{\heading}[2]{\begin{center}
+\Large #1 \hskip .5in #2 \hskip .5in Joe Christianson
+\end{center}}
+\usepackage{setspace}
+\doublespacing
+\begin{document}
+\begin{center}
+\Large Using Hopfield Nets for Basic Handwriting Recognition \\
+Joe Christianson, Neeraj Joshi, Wilbert Lam.
+\end{center}
+\section{What is the problem?}
+The goal of this project is to create a machine that can learn to translate handwritten letters (minimum of 26 for all upper case letters, with potential for 52 if we include uppercase) despite any additional noise into the equivalent ASCII character.
+\section{Our solution}
+We plan to use a Hopfield net to do the task of pattern recognition and noise reduction. A Hopfield net is modeled after the biological method of pattern recognition. A set of nodes that represent neurons are connected by a fully connected graph. Each edge in the graph represents a connection between neurons and has a weight associated with it. In biology stimulated neurons fire, sending a single out towards other neurons. We model this process by choosing one node to be the neuron receiving the signal and the rest to be the sources. Then calculating the signal is the vector product of the weights and the state of the other neurons. Several avenues then present themselves to calculating the next state of the net. A single matrix vector product could be calculated, this is equivalent to all neurons firing at once. It is clean from an engineering perspective, but not accurate of how neurons function in real life. Instead we could update the nodes iteratively. This could be done purely randomly, or a fixed random order. The fixed random order ensures that no individual node gets updated disproportionately, so we will likely go this route. 
+\section{Potential Difficulties or stages of development.} 
+We will need to be able to create a dataset to test and train the Hopfield net.  We can provide the handwritten letters as the sample set, as well as provide noise physically (scribbling out parts of the letter, spill coffee, different handwriting styles) or through the use of computer tools.  To ensure the clearest readings, we also plan on normalizing all the images of the letters through high contrast, as well as ensuring all images are of the same size.  One assumption we will make as well is that all images are intended to contain one and only one letter, with all other aspects of the image as stray noise.
+    
+\quad Another difficulty that may arise is when the Hopfield network has to classify very similar characters (i and j, I and T, etc.). These characters may converge to the same local minimum leading the network to believe that multiple characters could fit the same input sequence. A possible solution to this problem could be to randomize the order of updating the nodes and run various sets of these updates to see if one output character fits the model better than another. Another way around this problem is to hard code certain checks for similar characters and provide certain methods to distinguish the differences between the characters in consideration.
+\section{Future investigations}
+    Many extensions are available on this project, some which we may or may not have time to investigate.  A quick addition could be including letters and/or punctuation, to increase the range of symbols we can process with our model.  Also, one of our initial assumptions is that all images are intended to contain only one symbol.  By adjusting our model, we could potentially look into images with more than one letter, with the potential for words or entire pages.  We could also compare the accuracy of this model to our basic single letter model and investigate the advantages and disadvantages of investigating words to letters.
+
+\newpage
+
+\section{Sources}
+\subsection{Hopfield explanations:}
+http://web.cs.ucla.edu/~rosen/161/notes/hopfield.html
+
+http://www.comp.leeds.ac.uk/ai23/reading/Hopfield.pdf
+\subsection{Coding Example:   } 
+http://www.codeproject.com/Articles/15949/Hopfield-model-of-neural-network-for-pattern-recog
+
+
+\end{document}
