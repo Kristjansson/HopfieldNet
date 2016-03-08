@@ -20,7 +20,11 @@ classdef HopfieldNet
         end
         
         function val = biasFunc(self,updateVal)
-            val = updateVal >= 0;
+            if updateVal >= 0;
+                val = 1;
+            else 
+                val = 0;
+            end
         end
 
     %     check that an input call has been made first
@@ -31,7 +35,7 @@ classdef HopfieldNet
         function self = fullIteration(self, order)
 %             temp = randperm(self.size);
             for idx=order
-                self = self.singleIteration(self, idx);
+                self = self.singleIteration(idx);
             end
         end
 
@@ -40,6 +44,7 @@ classdef HopfieldNet
                 for innerIndex=[outerIndex:self.size]
                     if outerIndex ~= innerIndex
                         val = (2*pattern(outerIndex)-1)*(2*pattern(innerIndex)-1);
+%                         val = 1/self.size * (pattern(outerIndex))*(pattern(innerIndex));
                         self.weights(outerIndex, innerIndex) = val + self.weights(outerIndex, innerIndex);
                         self.weights(innerIndex, outerIndex) = val + self.weights(innerIndex, outerIndex);
                     else
