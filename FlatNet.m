@@ -1,7 +1,7 @@
 %% Parameters
 pPerNet = 2; %Patterns Per Net
-setsOfNets = combnk([1:10], 2);
-numNets = size(setsOfNets,1);
+inputPairs = combnk([1:10], 2);
+numNets = size(inputPairs,1);
 nodes = 400;
 
 %Create Flat Net (3D Array)
@@ -9,9 +9,8 @@ weights = zeros(nodes,nodes,numNets);
 neurons = zeros(nodes, 1, numNets);
 
 %% learnPatterns
-pairs = combnk([1:10], pPerNet);
 for netItr=1:numNets
-    patterns = DiscreteImgs(:,pairs(netItr, :));
+    patterns = DiscreteImgs(:,inputPairs(netItr, :));
     for outItr=[1:nodes] 
         for inItr=[outItr:nodes]
             if outItr ~= inItr
