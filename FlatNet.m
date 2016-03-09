@@ -14,7 +14,10 @@ for netItr=1:numNets
     for outItr=[1:nodes] 
         for inItr=[outItr:nodes]
             if outItr ~= inItr
-                val = sum((2*patterns(inItr, :)-1).*(2*patterns(outItr, :)-1));
+                %1or0 based
+%                 val = sum((2*patterns(inItr, :)-1).*(2*patterns(outItr, :)-1));
+                %1or-1 based
+                val = sum(patterns(inItr, :).*patterns(outItr, :));
                 weights(outItr, inItr, netItr) = val;
                 weights(inItr, outItr, netItr) = val;
             else

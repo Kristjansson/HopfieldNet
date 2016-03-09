@@ -1,88 +1,36 @@
 %% Initialize data
-DEBUG = 1 && exist('weights');
-close all; 
-
-if DEBUG
-    clearvars -except weights DEBUG
-else
-    clearvars -except DEBUG;
-end
+clearvars -except weights 
 
 load('ImgAvgs.mat', 'ImgAvgs');
 threshold = .4;
-DiscreteImgs = ImgAvgs > threshold;
+DiscreteImgs = (ImgAvgs > threshold) - (ImgAvgs <= threshold);
 
 disp('Data Loaded...')
 %% Create A FlatNet
 LookupTables; %generates tables and vectors for going back and forth between
               %neural net indexes and digit combos
-% if DEBUG
-%     disp('DEBUG MODE: SKIPPED NET INITIALIZATION')
-% else
-    FlatNet; %This gives us 'neurons' and 'weights' and trains them with ImgAvgs
-% end
+
+FlatNet; %This gives us 'neurons' and 'weights' and trains them with DiscreteImgs
 disp('Net Initialized...');
 %% LoadTestingData
-testDataSize = 100;
+testDataSize = 600;
 [Imgs_Test, Labels_Test] = readMNIST('C:\Users\Joseph\Documents\AMATH 383\FinalProject\t10k-images.idx3-ubyte','C:\Users\Joseph\Documents\AMATH 383\FinalProject\t10k-labels.idx1-ubyte',testDataSize, 0);
+Imgs_Test = reshape(Imgs_Test, [400, 1, testDataSize]);
+DiscreteImgs_Test = (Imgs_Test > threshold) - (Imgs_Test <= threshold);
 disp('Test Data Loaded...')
-%% Compares input digits to output
-close all;
-itrCount = 6000;
-testDataSize = 20;
-netNum = 5;
-% shuffled = randperm(size(Imgs_Test,3));
-% Imgs_Test = Imgs_Test(:, :,shuffled);
-disp(shuffled(1:10));
-for itr=1:testDataSize
-    image = 2*(Imgs_Test(:,:,itr) > threshold)-1;
-    neurons(:,1,netNum) = reshape(image, [400 1]);
-    for iterations =1:itrCount
-        neuronNum = ceil(400*rand());
-        neurons(neuronNum, 1, netNum) = biasFunc(weights(:, neuronNum, netNum)'*neurons(:,1,netNum));
-    end
-    subplot(2, testDataSize,itr), subimage(image);
-    subplot(2, testDataSize,itr + testDataSize), subimage(reshape((neurons(:,1,netNum)),[20 20]));  
-%     disp('done');
-end
-
-%% Focusses on a single digit
-
-close all;
-
-itrCount = 2000;
-period = 40;
-rows = 6;
-imageCount = 1;
-imageNum = 100;
-netNum = 39;
-
-imageVector = reshape(Imgs_Test(:,:,imageNum) > threshold,[400 1]);
-neurons(:,1,netNum) = imageVector;
-
-for itr =1:itrCount
-    if mod(itr,period) == 0
-        subplot(rows,ceil(itrCount/(rows*period)),imageCount), subimage(reshape((neurons(:,1,netNum)),[20 20]));
-        imageCount = imageCount + 1;
-    end
-    neuronNum = ceil(400*rand());
-    neurons(neuronNum, 1, netNum) = biasFunc(weights(:, neuronNum, netNum)'*neurons(:,1,netNum));
-end
-
-subplot(rows,ceil(itrCount/(rows*period)),imageCount),imshow(Imgs_Test(:,:,imageNum) > threshold);
-
 %% Digit Detector Using Bracket Method
 
 correct = 0;
 itrCount = 2000;
-for imageItr=1:testDataSize
+for imageItr=598:testDataSize
     %First Bracket Level    
 %     neurons(:,1,[1 18 31 40 45]) = repmat(reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]),1,1,5);
-    neurons(:,1,1) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
-    neurons(:,1,18) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
-    neurons(:,1,31) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
-    neurons(:,1,40) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
-    neurons(:,1,45) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
+    image = DiscreteImgs_Test(:,1,imageItr);
+    neurons(:,1,1) = image;
+    neurons(:,1,18) = image;
+    neurons(:,1,31) = image;
+    neurons(:,1,40) = image;
+    neurons(:,1,45) = image;
     for iterations = 1:itrCount
         neuronNum = ceil(400*rand());
         neurons(neuronNum, 1, 1) = biasFunc(weights(:, neuronNum, 1)'*neurons(:,1,1));
@@ -98,8 +46,8 @@ for imageItr=1:testDataSize
         output = neurons(:,1,resultsItr(2));
         [M,I] = min([sum(abs(output - DiscreteImgs(:,resultsItr(1))));
             sum(abs(output - DiscreteImgs(:,resultsItr(1) + 1)));
-            sum(abs(-1*(output-1) - DiscreteImgs(:,resultsItr(1))));
-            sum(abs(-1*(output-1) - DiscreteImgs(:,resultsItr(1) + 1)))]);
+            sum(abs(-1*(output) - DiscreteImgs(:,resultsItr(1))));
+            sum(abs(-1*(output) - DiscreteImgs(:,resultsItr(1) + 1)))]);
         results(ceil(resultsItr(1)/2)) = resultsItr(1)*(I == 1) + resultsItr(1)*(I==3) + (resultsItr(1) + 1)*(I==2) + (resultsItr(1) + 1)*(I==4); 
     end
     disp(sprintf('Results in from first round for image: %d', imageItr));
@@ -114,8 +62,8 @@ for imageItr=1:testDataSize
         33*((results(3) == 5) && (results(4) == 8)) + ...
         36*((results(3) == 6) && (results(4) == 7)) + ...
         37*((results(3) == 6) && (results(4) == 8));
-    neurons(:,1,netNum1) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
-    neurons(:,1,netNum2) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
+    neurons(:,1,netNum1) = image;
+    neurons(:,1,netNum2) = image;
     for iterations = 1:itrCount
         neuronNum = ceil(400*rand());
         neurons(neuronNum, 1, netNum1) = biasFunc(weights(:, neuronNum, netNum1)'*neurons(:,1,netNum1));
@@ -131,8 +79,8 @@ for imageItr=1:testDataSize
         digits = combVec(resultsItr,:);
         [M,I] = min([sum(abs(output - DiscreteImgs(:,digits(1))));
             sum(abs(output - DiscreteImgs(:,digits(2))));
-            sum(abs(-1*(output-1) - DiscreteImgs(:,digits(1))));
-            sum(abs(-1*(output-1) - DiscreteImgs(:,digits(2))))]);
+            sum(abs(-1*(output) - DiscreteImgs(:,digits(1))));
+            sum(abs(-1*(output) - DiscreteImgs(:,digits(2))))]);
         results = [results,...
             (digits(1)*(I == 1 || I == 3) +...
             digits(2)*(I == 2 || I == 4))]; 
@@ -142,7 +90,7 @@ for imageItr=1:testDataSize
     
     %Third Bracket Level (457)vs(89) with (0123) getting a by.
     netNum = combTable(results(2), got_A_by);
-    neurons(:,1,netNum) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
+    neurons(:,1,netNum) = image;
     for iterations = 1:itrCount
         neuronNum = ceil(400*rand());
         neurons(neuronNum, 1, netNum) = biasFunc(weights(:, neuronNum, netNum)'*neurons(:,1,netNum));
@@ -150,12 +98,13 @@ for imageItr=1:testDataSize
     
     %Determine Winners
     got_A_by = results(1);
-    
+    output = neurons(:, 1, netNum);
     digits = combVec(netNum,:);
+    
     [M,I] = min([sum(abs(output - DiscreteImgs(:,digits(1))));
             sum(abs(output - DiscreteImgs(:,digits(2))));
-            sum(abs(-1*(output-1) - DiscreteImgs(:,digits(1))));
-            sum(abs(-1*(output-1) - DiscreteImgs(:,digits(2))))]);
+            sum(abs(-1*(output) - DiscreteImgs(:,digits(1))));
+            sum(abs(-1*(output) - DiscreteImgs(:,digits(2))))]);
     results = digits(1)*(I == 1 || I == 3) + digits(2)*(I == 2 || I == 4);
     
     disp(sprintf('Results in from third round for image: %d', imageItr));
@@ -163,7 +112,7 @@ for imageItr=1:testDataSize
         
     %Fourth Bracket Level (0123)vs(45789)
     netNum = combTable(got_A_by, results);
-    neurons(:,1,netNum) = reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]);
+    neurons(:,1,netNum) = image;
     for iterations = 1:itrCount
         neuronNum = ceil(400*rand());
         neurons(neuronNum, 1, netNum) = biasFunc(weights(:, neuronNum, netNum)'*neurons(:,1,netNum));
@@ -171,12 +120,13 @@ for imageItr=1:testDataSize
     
     %Determine Winners
     got_A_by = results(1);
-    
     digits = combVec(netNum,:);
+    output = neurons(:, 1, netNum);
+
     [M,I] = min([sum(abs(output - DiscreteImgs(:,digits(1))));
             sum(abs(output - DiscreteImgs(:,digits(2))));
-            sum(abs(-1*(output-1) - DiscreteImgs(:,digits(1))));
-            sum(abs(-1*(output-1) - DiscreteImgs(:,digits(2))))]);
+            sum(abs(-1*(output) - DiscreteImgs(:,digits(1))));
+            sum(abs(-1*(output) - DiscreteImgs(:,digits(2))))]);
     results = digits(1)*(I == 1 || I == 3) + digits(2)*(I == 2 || I == 4);
     
     disp(sprintf('Final Result for image: %d', imageItr));
@@ -191,14 +141,6 @@ for imageItr=1:testDataSize
 end
 
 disp(sprintf('Accuracy: %d%%', 100*correct/testDataSize));
-
-
-
-
-
-
-
-
 
 
 
