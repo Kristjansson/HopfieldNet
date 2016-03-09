@@ -16,11 +16,16 @@ OverallAvg = ImgAvgs*ones(10,1)./10;
 
 
 %% Display the average pictures
+close all;
+
 threshold = .4;
-% for itr=1:10
-%     subplot(2,6,itr), subimage(reshape((ImgAvgs(:,itr)>threshold),[20 20]));    
-% end
 for itr=1:10
-%     subplot(2,6,itr), subimage(reshape(((abs(OverallAvg - ImgAvgs(:,itr)))>.2),[20 20]));    
+    subplot(2,5,itr), subimage(reshape((ImgAvgs(:,itr)>threshold),[20 20])), axis off;    
 end
+% for itr=1:10
+% %     subplot(2,6,itr), subimage(reshape(((abs(OverallAvg - ImgAvgs(:,itr)))>.2),[20 20]));    
+% end
 % subplot(2,6,11), subimage(reshape(OverallAvg > threshold, [20 20])); 
+
+% print('Averages', '-djpeg');
+
