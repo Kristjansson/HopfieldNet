@@ -13,7 +13,7 @@ LookupTables; %generates tables and vectors for going back and forth between
 FlatNet; %This gives us 'neurons' and 'weights' and trains them with DiscreteImgs
 disp('Net Initialized...');
 %% LoadTestingData
-testDataSize = 600;
+testDataSize = 6000;
 [Imgs_Test, Labels_Test] = readMNIST('C:\Users\Joseph\Documents\AMATH 383\FinalProject\t10k-images.idx3-ubyte','C:\Users\Joseph\Documents\AMATH 383\FinalProject\t10k-labels.idx1-ubyte',testDataSize, 0);
 Imgs_Test = reshape(Imgs_Test, [400, 1, testDataSize]);
 DiscreteImgs_Test = (Imgs_Test > threshold) - (Imgs_Test <= threshold);
@@ -22,7 +22,9 @@ disp('Test Data Loaded...')
 
 correct = 0;
 itrCount = 2000;
-for imageItr=598:testDataSize
+for imageItr=1:testDataSize
+    disp(sprintf('Results for image: %d', imageItr));
+    
     %First Bracket Level    
 %     neurons(:,1,[1 18 31 40 45]) = repmat(reshape(Imgs_Test(:,:,imageItr) > threshold,[400 1]),1,1,5);
     image = DiscreteImgs_Test(:,1,imageItr);
@@ -41,17 +43,22 @@ for imageItr=598:testDataSize
     end
     
     %Determine Winners
-    results = zeros(1,5); 
-    for resultsItr =[1,3,5,7,9;1 18 31 40 45]
-        output = neurons(:,1,resultsItr(2));
-        [M,I] = min([sum(abs(output - DiscreteImgs(:,resultsItr(1))));
-            sum(abs(output - DiscreteImgs(:,resultsItr(1) + 1)));
-            sum(abs(-1*(output) - DiscreteImgs(:,resultsItr(1))));
-            sum(abs(-1*(output) - DiscreteImgs(:,resultsItr(1) + 1)))]);
-        results(ceil(resultsItr(1)/2)) = resultsItr(1)*(I == 1) + resultsItr(1)*(I==3) + (resultsItr(1) + 1)*(I==2) + (resultsItr(1) + 1)*(I==4); 
+    results = []; 
+    
+    for resultsItr =[1 18 31 40 45] %netNums
+        output = neurons(:,1,resultsItr);
+        digits = combVec(resultsItr,:);
+        
+        [M,I] = min([sum(abs(output - DiscreteImgs(:,digits(1))));
+            sum(abs(output - DiscreteImgs(:,digits(2))));
+            sum(abs(-1*(output) - DiscreteImgs(:,digits(1))));
+            sum(abs(-1*(output) - DiscreteImgs(:,digits(2))))]);
+        results = [results,...
+            (digits(1)*(I == 1 || I == 3) +...
+            digits(2)*(I == 2 || I == 4))]; 
     end
-    disp(sprintf('Results in from first round for image: %d', imageItr));
-    disp(sprintf('\t\t[%d %d %d %d %d]', results));
+
+    disp(sprintf('\t\t1st Round: [%d %d %d %d %d]', results));
     
     %Second Bracket Level (01)vs(23) and (45)vs(67) with (89) getting a by.
     netNum1 = 2*((results(1) == 1) && (results(2) == 3)) + ...
@@ -85,8 +92,7 @@ for imageItr=598:testDataSize
             (digits(1)*(I == 1 || I == 3) +...
             digits(2)*(I == 2 || I == 4))]; 
     end
-    disp(sprintf('Results in from second round for image: %d', imageItr));
-    disp(sprintf('\t\t[%d %d] with %d on a by', results, got_A_by));
+    disp(sprintf('\t\t2nd Round: [%d %d] with %d on a by', results, got_A_by));
     
     %Third Bracket Level (457)vs(89) with (0123) getting a by.
     netNum = combTable(results(2), got_A_by);
@@ -107,8 +113,7 @@ for imageItr=598:testDataSize
             sum(abs(-1*(output) - DiscreteImgs(:,digits(2))))]);
     results = digits(1)*(I == 1 || I == 3) + digits(2)*(I == 2 || I == 4);
     
-    disp(sprintf('Results in from third round for image: %d', imageItr));
-    disp(sprintf('\t\t%d with %d on a by', results, got_A_by));
+    disp(sprintf('\t\t3rd Round: [%d] with %d on a by', results, got_A_by));
         
     %Fourth Bracket Level (0123)vs(45789)
     netNum = combTable(got_A_by, results);
@@ -129,15 +134,14 @@ for imageItr=598:testDataSize
             sum(abs(-1*(output) - DiscreteImgs(:,digits(2))))]);
     results = digits(1)*(I == 1 || I == 3) + digits(2)*(I == 2 || I == 4);
     
-    disp(sprintf('Final Result for image: %d', imageItr));
-    disp(sprintf('\t\t%d', results));
+    disp(sprintf('\t\t4th Round:%d', results));
     if Labels_Test(imageItr) == (results - 1)
-        disp('Evaluated Correctly!');
+        disp('Correct!');
         correct = correct + 1;
     else
-        disp('Evaluated Incorrectly!');
-        disp(sprintf('Correct Answer: %d', Labels_Test(imageItr) + 1));
+        disp(sprintf('Incorrect. \t Answer: %d', Labels_Test(imageItr) + 1));
     end
+    disp('----------------------------------------');
 end
 
 disp(sprintf('Accuracy: %d%%', 100*correct/testDataSize));
