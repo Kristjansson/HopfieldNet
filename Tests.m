@@ -1,4 +1,4 @@
-TestsToRun = [1];
+TestsToRun = [2];
 
 if any(1==TestsToRun)
     %% Compares input digits to output
@@ -34,8 +34,8 @@ if any(2==TestsToRun)
     period = 200;
     rows = 1;
     imageCount = 1;
-    imageNum = 5;
-    netNum = combTable(5,10);
+    imageNum = 2;
+    netNum = combTable(3,4);
 
     % imageVector = reshape(Imgs_Test(:,:,imageNum) > threshold,[400 1]);
     % neurons(:,1,netNum) = imageVector;
