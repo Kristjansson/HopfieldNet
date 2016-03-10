@@ -9,6 +9,7 @@ end
 for iterations = 1:itrCount
     neuronNum = ceil(400*rand());
     for netNum = netNums
-        neurons(neuronNum, 1, netNum) = biasFunc(weights(:, neuronNum, netNum)'*neurons(:,1,netNum));
+        neurons(neuronNum, 1, netNum) = ...
+            biasFunc(weights(:, neuronNum, netNum)'*neurons(:,1,netNum));
     end
 end

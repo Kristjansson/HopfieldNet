@@ -1,0 +1,364 @@
+\documentclass[]{article}
+\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{wasysym}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\ReF}{\operatorname{Re}}
+\newcommand{\Lap}{\mathcal{L}}
+\newcommand{\B}[1]{\boldsymbol{#1}}
+\newcommand{\p}{\text{proj}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\I}[1]{#1^\text{int}}
+\newcommand{\bnd}[1]{\partial #1}
+\newcommand{\mx}[1]{\text{max}(#1)}
+\newcommand{\mn}[1]{\text{min}(#1)}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+\newcommand{\pd}{\partial}
+\newcommand{\eval}[3]{\left.#1\right|_#2^#3}
+\newcommand{\del}[2]{\pd_{#2} #1}
+\newcommand{\delH}[3]{\pd^{#1}_{#3} #2}
+\newcommand{\Int}[2]{\int\limits_{#1}^{#2}}
+\newcommand{\IInt}{\int\!\!\!\!\int}
+\newcommand{\IIInt}{\int\!\!\!\!\int\!\!\!\!\int}
+\newcommand{\Sum}[2]{\sum\limits_{#1}^{#2}}
+\newcommand{\Uni}[2]{\bigcup\limits_{#1}^{#2}}
+\newcommand{\VA}[3]{\left(\begin{array}{c}
+#1\\
+#2\\
+#3
+\end{array}\right)}
+\newcommand{\qed}{\hfill\square }
+\newcommand{\A}{\text{A}}
+\newcommand{\Hline}{\noindent\rule[0.5ex]{\linewidth}{1pt}}
+\newcommand{\txtfn}[2]{\text{#1}\left(#2\right)}
+\graphicspath{c:/users/joseph/documents/"AMATH 383"/FinalProject/HopfieldNet}
+
+
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+%\usepackage{esint}
+
+% matrix environment for vectors or matrices where elements are centered
+\newenvironment{mat}{\left[\begin{array}{ccccccccccccccc}}{\end{array}\right]}
+\newcommand\bcm{\begin{mat}}
+\newcommand\ecm{\end{mat}}
+
+% matrix environment for vectors or matrices where elements are right justifvied
+\newenvironment{rmat}{\left[\begin{array}{rrrrrrrrrrrrr}}{\end{array}\right]}
+\newcommand\brm{\begin{rmat}}
+\newcommand\erm{\end{rmat}}
+
+
+
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage[all]{xy}
+\usepackage{epstopdf}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+\theoremstyle{plain}
+\newtheorem{thm}{\protect\theoremname}
+  \theoremstyle{definition}
+  \newtheorem{xca}[thm]{\protect\exercisename}
+  
+\usepackage{setspace}
+\doublespacing
+  
+  
+
+\title{Modeling Cognitive Pattern Recognition Using Hopfield Neural Networks}
+
+\author{Joseph Christianson, Wilbert Lam, Neeraj Joshi}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Hopfield Neural Networks are a simple model of biological cognitive processes. In this paper we introduce how the Hopfield Neural Network operates. We analyze the dynamics to show how information that is learned is stored in the stable points; we demonstrate how to build one from simply matrix products; and, we test our resulting model on the famous MNIST dataset. 
+\end{abstract}
+
+\newpage
+
+\section{Solution}
+
+\quad Our solution had several steps. First we preprocessed the data by importing and calculating an average value for each pixel. We normalized these values so that they fell between 0 and 1. We used a threshold value to discretize the pixel values. 0.4 was chosen somewhat arbitrarily, because it was the largest value that left each number as a single, connected figure. If a pixel value was above we cast it to We then transformed the $ 20\times20 $ pixel arrays into $ 400\times 1 $ pixel vectors. 
+
+%\begin{figure}[H]
+%\center{
+%\includegraphics[scale = 0.3]{Averages}
+%\includegraphics[scale = 0.3]{AveragesNoThreshold}
+%}
+%\end{figure}
+
+
+Our first attempt at processing the data was to create a single Hopfield network and train it on the 10 image averages that we had calculated. This resulted in zero percent accuracy because a spurious minimum overpowered the trained patterns. These results can be seen in for 20 random images in figures 3 and 4. The value they are converging to is the overall average of every training digit. This makes sense because the digits are relatively similar patterns, when too many are put into one net, they can collapse to an average. 
+
+\begin{figure}[h]
+\centering
+%\includegraphics[scale = 0.3]{AllConvergeToAverage1}
+\includegraphics[scale = 0.3]{AllConvergeToAverage2}
+\caption{This shows ten random digits all converging to the same pattern. Investigation revealed that this pattern is the average of the individual digit patterns.}
+\end{figure}
+
+We then decided to try a different path. Rather than a single net that stores all the patterns, we would have multiple nets where each one was responsible for only two patterns. This method required $ \left(\begin{array}{c}
+10\\2
+\end{array}\right) = 45 $ nets. We would use a bracket-style system to discern the digit in the input vector. Because we used this bracket method, we only had to evaluate the convergence of nine separate Hopfield nets. We were able to correctly discern the digits on around 67\% of the MNIST test data. 
+
+
+\newpage
+There are a few sub-routines we shall explain in detail. 
+
+The first is \texttt{initializeNet.m}. This sub-routine creates the 
+
+\singlespacing
+\begin{verbatim}
+%% Parameters
+inputPairs = combnk([1:10], 2);
+numNets = size(inputPairs,1);
+nodes = 400;
+
+%Create Flat Net (3D Array)
+weights = zeros(nodes,nodes,numNets);
+neurons = zeros(nodes, 1, numNets);
+
+%% learnPatterns
+for netItr=1:numNets
+    patterns = DiscreteImgs(:,inputPairs(netItr, :));
+    for outItr=[1:nodes] 
+        for inItr=[outItr:nodes]
+            if outItr ~= inItr
+                val = sum(patterns(inItr, :).*patterns(outItr, :));
+                weights(outItr, inItr, netItr) = val;
+                weights(inItr, outItr, netItr) = val;
+            else
+                weights(outItr, inItr, netItr) = 0;
+            end
+        end
+    end
+end
+
+\end{verbatim}
+\doublespacing
+
+\texttt{initializeNet.m} is responsible for the training of the Hopfield nets. It holds onto the weights and neurons of these nets as three dimensional arrays. Indexes one and two denote the element in a weight or neuron matrix and the third dimension can be thought of as an address for individual neural nets. 
+
+We chose to represent stimuli as $ 1 $ for on, and $ -1 $ for off. Therefore, as mentioned above, for a list of $ n $ patterns $ P $, we can set the value of each weight $ w_{ij} $ as such:
+\[ w_{ij} = \sum\limits_{k = 1}^{n}(p_{k})_i(p_{k})_j, \quad i\neq j \qquad w_{ij} = 0, \quad i=j \] where $ (p_k)_i $ is the element at index $ i $ for pattern $ k $.
+\newpage
+The next sub-routine we wish to show is \texttt{processInput.m}
+\singlespacing
+\begin{verbatim}
+% Subroutine - For a set image and pre-initialized nets, updates the
+% neurons for a set amount of iterations. 
+
+for netNum = netNums
+    neurons(:,1,netNum) = image;
+end
+
+for iterations = 1:itrCount
+    neuronNum = ceil(400*rand());
+    for netNum = netNums
+        neurons(neuronNum, 1, netNum) = ...
+            biasFunc(weights(:, neuronNum, netNum)'*neurons(:,1,netNum));
+    end
+end
+\end{verbatim}
+\doublespacing
+\quad In \texttt{processInput.m} we capture describe how the Hopfield networks respond to stimulus. Before it is called a vector is assigned to \texttt{netNums}. In the bracket structure multiple networks are responding to the same stimulus at once; the digit they converge to determine which networks are selected for the next round. 
+
+A single iteration involves choosing a neuron at random (\texttt{neuronNum}), then taking the inner product of the corresponding column in the \texttt{weights} matrix and the \texttt{neurons} vector, and finally passing that value through \texttt{biasFunc}. \texttt{biasFunc} is simply:
+\[ f(x) = \left\{\begin{array}{cc}
+1 &: x \geq 0\\
+-1 &: x < 0
+\end{array}\right. \]
+Conditions for stopping could be no change in the network energy, or no change in the neurons for several iterations. However, we opted to simply set an iteration count after which we observed convergence. (\texttt{itrCount = 2000} is set elsewhere).
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale = 1.2]{fourConverges}
+\caption{A inputed four converges to the average four over 2000 iterations of a Hopfield net trained to recognize fours and nines. The images are in 200 iteration increments.}
+\end{figure}
+
+\newpage
+
+The final sub-routine we wish to focus on is \texttt{determineResults.m}.
+\singlespacing
+\begin{verbatim}
+% Subroutine - After neurons have converged, figures out with digit average
+% they converged to. Stores the decisions in a reults vector. 
+
+results = []; 
+
+for resultsItr =netNums %netNums
+    output = neurons(:,1,resultsItr);
+    digits = combVec(resultsItr,:);
+
+    [M,I] = min([sum(abs(output - DiscreteImgs(:,digits(1))));
+        sum(abs(output - DiscreteImgs(:,digits(2))));
+        sum(abs(-1*(output) - DiscreteImgs(:,digits(1))));
+        sum(abs(-1*(output) - DiscreteImgs(:,digits(2))))]);
+    results = [results,...
+        (digits(1)*(I == 1 || I == 3) +...
+        digits(2)*(I == 2 || I == 4))]; 
+end
+\end{verbatim}
+\doublespacing
+\quad After the stable state for the neurons has been calculated, this routine determines which pattern each the net converges to. Because we chose to have an iteration count be our condition for convergence, the pattern may be off from the true average pattern by a few pixels. Even though our neuron vectors are ones and negative ones, rather than ones and zeros, we can still calculate what is effectively the Hamming Distance. Each net is only responsible for two patterns, however, when a pattern is trained in a Hopfield network, its inverse is also implicitly trained. Therefore, we have to check the distance for both the output to each pattern and the inverse of the output to each pattern. We take the pattern that had the minimum Hamming Distance of these four comparisons and set that as our result for that network. 
+
+\newpage
+
+\section{Appendix}
+Here we include scripts required to run the model, but that do not provide insight into the mathematical model. 
+\subsection{\texttt{main.m} }
+\singlespacing
+\begin{verbatim}
+%% Initialize data
+clearvars -except weights 
+
+load('ImgAvgs.mat', 'ImgAvgs');
+threshold = .4;
+DiscreteImgs = (ImgAvgs > threshold) - (ImgAvgs <= threshold);
+
+disp('Data Loaded...')
+%% Create A "Flat" Hopfield Net
+LookupTables; %generates tables and vectors for going back and forth between
+              %neural net indexes and digit combos
+
+FlatNet; %This gives us 'neurons' and 'weights' and trains them with DiscreteImgs
+disp('Net Initialized...');
+%% LoadTestingData
+testDataSize = 100;
+[Imgs_Test, Labels_Test] = readMNIST('C:\Users\Joseph\Documents\AMATH 383\FinalProject\t10k-images.idx3-ubyte','C:\Users\Joseph\Documents\AMATH 383\FinalProject\t10k-labels.idx1-ubyte',testDataSize, 0);
+Imgs_Test = reshape(Imgs_Test, [400, 1, testDataSize]);
+DiscreteImgs_Test = (Imgs_Test > threshold) - (Imgs_Test <= threshold);
+disp('Test Data Loaded...')
+
+%% Digit Detector Using Bracket Method
+
+correct = 0;
+itrCount = 2000;
+for imageItr=1:testDataSize
+    disp(sprintf('Results for image: %d', imageItr));
+    
+    %First Bracket Level    
+    image = DiscreteImgs_Test(:,1,imageItr);
+    netNums = [1 18 31 40 45];
+    processInput;
+    determineResults;
+
+    disp(sprintf('\t\t1st Round: [%d %d %d %d %d]', results));
+    
+    %Second Bracket Level (01)vs(23) and (45)vs(67) with (89) getting a by.
+    netNums = [combTable(results(1), results(2))...
+        combTable(results(3), results(4))];
+    processInput;
+    got_A_by = results(5);
+    determineResults;
+    
+    disp(sprintf('\t\t2nd Round: [%d %d] with %d on a by', results, got_A_by));
+    
+    %Third Bracket Level (457)vs(89) with (0123) getting a by.
+    netNums = [combTable(results(2), got_A_by)];
+    processInput;
+    got_A_by = results(1);
+    determineResults;
+    
+    disp(sprintf('\t\t3rd Round: [%d] with %d on a by', results, got_A_by));
+        
+    %Fourth Bracket Level (0123)vs(45789)
+    netNums = [combTable(got_A_by, results)];
+    processInput;
+    determineResults;
+    
+    disp(sprintf('\t\t4th Round:%d', results));
+    if Labels_Test(imageItr) == (results - 1)
+        disp('Correct!');
+        correct = correct + 1;
+    else
+        disp(sprintf('Incorrect. \t Answer: %d', Labels_Test(imageItr) + 1));
+    end
+    disp('----------------------------------------');
+end
+
+disp(sprintf('Accuracy: %d%%', 100*correct/testDataSize));
+\end{verbatim}
+\subsection{\texttt{CalMNIST.m}}
+\begin{verbatim}
+%%Calculate the averages for eacb digit
+[imgs, labels] = readMNIST(...
+    'C:\Users\Joseph\Documents\AMATH 383\FinalProject\train-images.idx3-ubyte',...
+    'C:\Users\Joseph\Documents\AMATH 383\FinalProject\train-labels.idx1-ubyte',60000, 0);
+load('ImgAvgs.mat', 'ImgAvgs');
+ImgAvgs = zeros(20*20,10);
+ImgCounts = zeros(1,10);
+for itr=1:60000
+    num = labels(itr) + 1;
+    temp = reshape(imgs(:,:,itr), [20*20,1]);
+    ImgAvgs(:, num) = ImgAvgs(:, num) + temp;
+    ImgCounts(1,num) = ImgCounts(1, num) + 1;
+end
+ImgAvgs = ImgAvgs./(ones(400,1)*ImgCounts);
+save('ImgAvgs.mat', 'ImgAvgs');
+
+OverallAvg = ImgAvgs*ones(10,1)./10;
+
+\end{verbatim}
+\subsection{LookupTables.m}
+\begin{verbatim}
+combTable = ...
+    [0 1 2 3 4 5 6 7 8 9;...
+    0 0 10 11 12 13 14 15 16 17;...
+    0 0 0 18 19 20 21 22 23 24;...
+    0 0 0 0 25 26 27 28 29 30;...
+    0 0 0 0 0 31 32 33 34 35;...
+    0 0 0 0 0 0 36 37 38 39;...
+    0 0 0 0 0 0 0 40 41 42;...
+    0 0 0 0 0 0 0 0 43 44;...
+    0 0 0 0 0 0 0 0 0 45;...
+    0 0 0 0 0 0 0 0 0 0];
+combTable = combTable' + combTable;
+combVec = combnk([1:10], 2);
+\end{verbatim}
+
+\subsection{\texttt{readMNIST.m}}
+\begin{verbatim}
+function [imgs, labels] = readMNIST(imgFile, labelFile, readDigits, offset)
+\end{verbatim}
+\doublespacing
+This function was written by Siddharth Hegde, and distributed under the BSD License\textsl{}\footnote{Copyright (c) 2010, Sid H
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in
+      the documentation and/or other materials provided with the distribution
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.}
+\end{document}

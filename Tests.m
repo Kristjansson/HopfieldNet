@@ -8,7 +8,7 @@ if any(1==TestsToRun)
     netNum = 1;
     imageNum = 1;
     
-    ran=[10:testDataSize];
+    ran=[11:20];
     % shuffled = randperm(size(Imgs_Test,3));
     % Imgs_Test = Imgs_Test(:, :,shuffled);
     % disp(shuffled(1:10));
@@ -31,10 +31,10 @@ if any(2==TestsToRun)
     close all;
 
     itrCount = 2000;
-    period = 40;
-    rows = 6;
+    period = 200;
+    rows = 1;
     imageCount = 1;
-    imageNum = 5987;
+    imageNum = 5;
     netNum = combTable(5,10);
 
     % imageVector = reshape(Imgs_Test(:,:,imageNum) > threshold,[400 1]);
