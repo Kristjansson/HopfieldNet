@@ -11,4 +11,97 @@
 Hopfield Neural Networks are a simple model of biological cognitive processes. In this paper we introduce how the Hopfield Neural Network operates. We analyze the dynamics to show how information that is learned is stored in the stable points; we demonstrate how to build one from simply matrix products; and, we test our resulting model on the famous MNIST dataset. 
 \end{abstract}
 
+\section{Problem}
+The goal of this project is to create a model that can allow a machine to translate handwritten digits into their corresponding ASCII values. This will begin to solve the problem of translating handwritten documents to bits that a computer can understand and process. The model’s primary goal is to be able to distinguish digits despite variation and noise in the handwritten input. We will be using the MNIST database of handwritten digits, which includes a training set of 60,000 examples and a test set of 10,000 examples. Due to the scope of this project, we will be limiting our testing and training data to a smaller subset of the digit images. 
+
+\hfill \break
+Other machine learning algorithms have been developed to recognize the inputs from the MNIST database into recognized digit outputs. Looking at the error rate for our testing set, we can compare and see how well our model does compared to the other machine learning algorithms implemented. A list available on the MNIST database homepage details different classifiers, the preprocessing done for each and their corresponding test error rate. The Hopfield Network has not been listed, which will allow us to contribute our findings that are novel to the database. 
+
+\section{Assumptions}
+Before we create our Hopfield network, there are some assumptions and simplifications that we made to make our model more reasonable and feasible given the limitations of our available time and computing power.  
+
+\hfill \break
+Our neural network model is based upon the Hopfield network model.  As a result, this is a fully recurrent network where each individual node is interconnected with every other possible node in the network (with the exception of itself), creating a collection net of directed cycles.  Therefore each node will be both an input and output, which contrasts to other types of neural nets such as feedforward.
+
+\hfill \break
+Nodes are updated randomly at each state asynchronously.  Because of the nature of recurrent networks, each updated node relies on the previous state of the network.  This echoes practical biological network models.
+
+\hfill \break
+	Our dataset is drawn from the MSINT dataset by Yann LeCun.
+It includes purely single digit numerical values, from 0 to 9, where all images are intended to contain only one number in each frame.  The images from the dataset are centered and initially set to both pixel height and pixel width of 28, but we have truncated 4 pixels from the outside each image to reduce images to side length of 20 pixels (these pixels are almost all purely unnecessary with regards to the uniqueness of each image and are truncated to save computation time and space.
+
+\hfill \break
+	An additional simplification is that we only process individual single digit numbers.  Our model is designed to learn and recognize a single digit at a time rather than a series of numbers.  With this in mind, our project could potentially be expanded to include more digits if we had a system that could split an image of a many digit number into individual digits.  Then each of these digits could be run through our model and combined digit by digit.  However, due to time limitations and our focus on the modeling aspect, that is not a feasible option for this project.
+	
+\hfill \break
+Each node in our network will correlate to a single individual pixel for each image.  This provides us a clean way of identifying our network nodes that remains consistent throughout all the images (all images will thus contain the same number of pixels and thus same number of nodes).
+
+\hfill \break
+Each image is in grayscale, with intensity ranging from total absence of intensity 0 (black) to a total presence of intensity of 1 (black).  This allows us to avoid having to worry about colour and superfluous variations in each image, as well as allowing us to easily translate each image into high contrast through a threshold bound.
+
+\hfill \break
+	Another assumption we have made is that all images are not truly a random collection of pixels of varying intensities.  Each image is pulled from handwriting taken from real-life users and can thus be correlated to an intended result.  This guarantees our model is learning from real data.
+
+
+\section{Model}
+In order to solve our problem, we will utilize some of the concepts and ideas from artificial neural networks, a family of models inspired by biological neural networks. Artificial neural networks serve as systems in which weighted input and output is exchanged between neurons to produce desirable outcomes from a set of specified inputs. The connections between neurons have numeric weights which signify the importance of the inputs and outputs translated, and allows the neural network to be adaptive and trainable for different input-output systems.
+
+\hfill \break
+What separates the Hopfield network from other neural networks is its ability to retrieve certain patterns based on inputted cues. This is called Content Addressable Memory (CAM) and allows for noisy and often varied input cues to still retrieve the correct and desired patterns. To use the network, a pattern must be entered, setting certain nodes to specific numeric values, which then allows the network to update synchronously or asynchronously, finally arriving at a previously trained pattern. We chose to use the method of asynchronous random updating which consists of updating neurons immediately in a random order. When training a Hopfield network, certain patterns are stored within the weight matrix by recognizing the strength and weakness of the connections present between each of the nodes in the input. The dynamics of the network cause the inputted cues to converge to certain trained patterns in the weight matrix.  
+
+\hfill \break
+As stated above, there are certain restrictions that must be placed when determining the weight matrix of the network. The matrix must be symmetric, namely \(w_{ij} = w_{ji}\), where \(w_{ij}\) represents the weight from neuron \texit{i} to neuron \textit{j}. Also, the matrix must not contain any self-connections (\(w_{ii} \neq 0\)). To determine what the weight value from a neuron i to neuron j would be, we chose to implement Hebb rule which defines \(w_{ij} = x_{i} * x_{j}\). A weight between two neurons that is positive will result in the neurons driving each other in the same direction of the value they currently possess. On the other hand, a negative weight between two neurons will drive each other in opposite directions which makes intuitive sense because they do not originally share the same value. Placing the two conditions on the weight matrix and implementing the weight between two neurons to be \(w_{ij} = x_{i}x_{j}\) ensures that the network converges to a certain pattern in the network. This results directly from the value of the energy of the network.
+
+\hfill \break
+Now energy can be defined for each node as \(E_{i} = -\frac{1}{2}h_{i}x_{i}\).   Ideally, the patterns we want to match with occur when the entire network’s energy is at a minimum state.  That is we will have a stable state where the sum of all energies \(\sum_{i} -\frac{1}{2}h_{i}x_{i} = \sum_{ij} -\frac{1}{2}w_{ij}x_{i}x_{j}\) for each node in the system is of low energy.  In our case, we iterate a given number of times over the network to a point where we achieve reasonable stable states at which the network’s energy is then minimized. 
+
+\hfill \break
+In a Hopfield network, all energy in the system will decrease if values of the node changes.  We can prove this by the following: 
+	
+	Now \[E(t) = \sum_{ij} -\frac{1}{2}w_{ij}x_{i}x_{j} = \sum_{ij,i\neq p,j \neq p} -\frac{1}{2}w_{ij}x_{i}x_{j} - \frac{1}{2} \sum_{j} w_{pj}x_{p}x_{j} - \frac{1}{2} \sum_{i} w_{ip}x_{i}x_{p}\].
+	
+	If we find \(E(t+1) - E(t)\), we can find calculate \(\triangle E\) and show that the energy change decreases.
+	
+	We find \(E(t+1)\) and let our new \(x_{p}\) be \(x^{*}_{p}\).
+	
+	Then \[E(t+1) = -\frac{1}{2}\sum_{ij,i\neq p,j \neq p} w_{ij}x_{i}x_{j} - \frac{1}{2} \sum_{j} w_{pj}x^{*}_{p}x_{j} - \frac{1}{2} \sum_{i} w_{ip}x_{i}x^{*}_{p}\].
+	
+	Since \(\triangle E = E(t+1) - E(t)\), we can solve \triangle \(E\) below:
+	\[\triangle E = - \frac{1}{2} \sum_{j} w_{pj}x^{*}_{p}x_{j} - \frac{1}{2} \sum_{i} w_{ip}x_{i}x^{*}_{p} + \frac{1}{2} \sum_{j} w_{pj}x_{p}x_{j} + \frac{1}{2} \sum_{i} w_{ip}x_{i}x_{p}\].
+	
+	By symmetry of the weight matrix, we find
+	\[\triangle E = \sum_{i} w_{pi}x_{i}(x_{p}-x^{*}_{p})\].
+	
+	Now when we update there are two possibilities:
+	\[x_{p} : -1 \rightarrow 1\]
+	\[x_{p} : 1 \rightarrow -1\]
+	
+	If we plug in the values for \(x_{p}\) and \(x^{*}_{p}\) into /triangle (\E\), we find that in the first case \(x_{p}-x^{*}_{p} = -2\), but since this can only occur when \(\sum_{i} w_{pi}x_{i}\) is positive, then \(\triangle E < 0\).  The second case is swapped, and thus we also have \(triangle E < 0\).
+	
+	Thus \(\triangle E\) is always negative, and so energy in the system can only decrease.
+	
+	
+
+\section{Solution}
+
+\section{Results}
+
+\section{Improvements}
+The goal of this project was to read individual numbers and classify them.  Naturally, given the limited scope of reading numbers, further improvement could be done to expand the scope of characters to include identifying letters as well.  At this point in time that would have proven too difficult to do with enough accuracy (especially given the similarities between some letters and numbers), but that would be a logical next step.  Due to the fact that this was intended to be a mathematical modeling project, we limited our source of images to be single letter images.  As stated earlier in the paper, we could provide more functionality by allow the images to be multiple digit numbers, with an added mechanism to divide up letters and then run each letter through our model.  As this is somewhat out of the purpose of our project, we chose not to implement this.  However, for purposes of fleshing out and making this project more applicable to the real world, this would be a very powerful improvement.
+Further improvements could be done in the implementation of the Hopfield network.  
+
+\section{Conclusion}
+
+\section{References}
+"Hopfield Networks." A Hopfield Net Example. Web. 09 Mar. 2016. 
+DeKampfs, Mark. "Hopfield Networks." Hopfield Networks. Leeds University. Web. 09 Mar. 2016.
+
+"Notes on Neural Networks." Notes on Neural Networks. Web. 09 Mar. 2016.
+
+"Hopfield Network." A Simple Neural Network. Web. 09 Mar. 2016.
+
+
+ PICTURE HERE
+https://en.wikipedia.org/wiki/Hopfield_network#/media/File:Energy_landscape.png
+
 \end{document}
