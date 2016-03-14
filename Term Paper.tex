@@ -85,7 +85,7 @@
 \maketitle
 
 \begin{abstract}
-Hopfield Neural Networks are a simple model of biological cognitive processes. In this paper we introduce how the Hopfield Neural Network operates. We analyze the dynamics to show how information that is learned is stored in the stable points; we demonstrate how to build one from simply matrix products; and, we test our resulting model on the famous MNIST dataset. 
+Hopfield Neural Networks are a simple model of biological cognitive processes. In this paper we introduce how the Hopfield Neural Network operates. We analyze the dynamics to show how information that is learned is stored in the stable points; we demonstrate how to build one from simply matrix products; and, we test our resulting model on the famous MNIST dataset. We were able to achieve 67\% percent accuracy on the test data using Hopfield networks trained on pairs of the digits, arranged in a bracket, tournament style, structure. 
 \end{abstract}
 
 \section{Problem}
@@ -103,18 +103,15 @@ Our neural network model is based upon the Hopfield network model.  As a result,
 
 Nodes are updated randomly at each state asynchronously.  Because of the nature of recurrent networks, each updated node relies on the previous state of the network.  This echoes practical biological network models.
 
+Our dataset is drawn from the MSINT dataset by Yann LeCun.
+It includes purely single digit numerical values, from 0 to 9, where all images are intended to contain only one number in each frame.  The images from the dataset are centered and initially set to both pixel height and pixel width of 28, but we have truncated 4 pixels from the outside each image to reduce images to side length of 20 pixels (these pixels are almost all purely unnecessary with regards to the uniqueness of each image and are truncated to save computation time and space).
 
-	Our dataset is drawn from the MSINT dataset by Yann LeCun.
-It includes purely single digit numerical values, from 0 to 9, where all images are intended to contain only one number in each frame.  The images from the dataset are centered and initially set to both pixel height and pixel width of 28, but we have truncated 4 pixels from the outside each image to reduce images to side length of 20 pixels (these pixels are almost all purely unnecessary with regards to the uniqueness of each image and are truncated to save computation time and space.
-
-
-	An additional simplification is that we only process individual single digit numbers.  Our model is designed to learn and recognize a single digit at a time rather than a series of numbers.  With this in mind, our project could potentially be expanded to include more digits if we had a system that could split an image of a many digit number into individual digits.  Then each of these digits could be run through our model and combined digit by digit.  However, due to time limitations and our focus on the modeling aspect, that is not a feasible option for this project.
-	
+An additional simplification is that we only process individual single digit numbers.  Our model is designed to learn and recognize a single digit at a time rather than a series of numbers.  With this in mind, our project could potentially be expanded to include more digits if we had a system that could split an image of a many digit number into individual digits.  Then each of these digits could be run through our model and combined digit by digit.  However, due to time limitations and our focus on the modeling aspect, that is not a feasible option for this project.	
 
 Each node in our network will correlate to a single individual pixel for each image.  This provides us a clean way of identifying our network nodes that remains consistent throughout all the images (all images will thus contain the same number of pixels and thus same number of nodes).
 
 
-Each image is in grayscale, with intensity ranging from total absence of intensity -1 (white) to a total presence of intensity of 1 (black).  This allows us to avoid having to worry about color and superfluous variations in each image, as well as allowing us to easily translate each image into high contrast through a threshold bound.
+Each image is in grayscale, with intensity ranging from total absence of intensity 0 (white) to a total presence of intensity of 1 (black).  This allows us to avoid having to worry about color and superfluous variations in each image, as well as allowing us to easily translate each image into high contrast through a threshold bound.
 
 
 Another assumption we have made is that all images are not truly a random collection of pixels of varying intensities.  Each image is pulled from handwriting taken from real-life users and can thus be correlated to an intended result.  This guarantees our model is learning from real data.
@@ -127,7 +124,7 @@ In order to solve our problem, we will utilize some of the concepts and ideas fr
 What separates the Hopfield network from other neural networks is its ability to retrieve certain patterns based on inputted cues. This is called Content Addressable Memory (CAM) and allows for noisy and often varied input cues to still retrieve the correct and desired patterns. To use the network, a pattern must be entered, setting certain nodes to specific numeric values, which then allows the network to update synchronously or asynchronously, finally arriving at a previously trained pattern. We chose to use the method of asynchronous random updating which consists of updating neurons immediately in a random order. When training a Hopfield network, certain patterns are stored within the weight matrix by recognizing the strength and weakness of the connections present between each of the nodes in the input. The dynamics of the network cause the inputted cues to converge to certain trained patterns in the weight matrix.  
 
 
-As stated above, there are certain restrictions that must be placed when determining the weight matrix of the network. The matrix must be symmetric, namely $ w_{ij} = w_{ji} $, where $w_{ij}$ represents the weight from neuron \textit{i} to neuron \textit{j}. Also, the matrix must not contain any self-connections ($w_{ii} \neq 0$). To determine what the weight value from a neuron i to neuron j would be, we chose to implement Hebb Rule which defines $w_{ij} = x_{i} * x_{j}$. A weight between two neurons that is positive will result in the neurons driving each other in the same direction of the value they currently possess. On the other hand, a negative weight between two neurons will drive each other in opposite directions which makes intuitive sense because they do not originally share the same value. This is the notion of ``fire together, wire together'' that is often associated with the Hebb Rule. Placing the two conditions on the weight matrix and implementing the weight between two neurons to be $w_{ij} = x_{i}x_{j}$ ensures that the network converges to a certain pattern in the network. This results directly from the value of the energy of the network.
+As stated above, there are certain restrictions that must be placed when determining the weight matrix of the network. The matrix must be symmetric, namely $ w_{ij} = w_{ji} $, where $w_{ij}$ represents the weight from neuron \textit{i} to neuron \textit{j}. Also, the matrix must not contain any self-connections ($w_{ii} = 0$). To determine what the weight value from a neuron i to neuron j would be, we chose to implement Hebb's Rule which defines $w_{ij} = x_{i}\times x_{j}$. A weight between two neurons that is positive will result in the neurons driving each other in the same direction of the value they currently possess. On the other hand, a negative weight between two neurons will drive each other in opposite directions which makes intuitive sense because they do not originally share the same value. This is the notion of ``fire together, wire together'' that is often associated with the Hebb Rule. Placing the two conditions on the weight matrix and implementing the weight between two neurons to be $w_{ij} = x_{i}x_{j}$ ensures that the network converges to a certain pattern in the network. This results directly from the value of the energy of the network.
 
 
 Now energy can be defined for each node as $E_{i} = -\frac{1}{2}h_{i}x_{i}$.   Ideally, the patterns we want to match with occur when the entire network's energy is at a minimum state.  That is we will have a stable state where the sum of all energies $\sum_{i} -\frac{1}{2}h_{i}x_{i} = \sum_{ij} -\frac{1}{2}w_{ij}x_{i}x_{j}$ for each node in the system is of low energy.  In our case, we iterate a given number of times over the network to a point where we achieve reasonable stable states at which the network's energy is then minimized. 
@@ -161,21 +158,21 @@ Thus $\Delta E$ is always negative, and so energy in the system can only decreas
 
 \section{Solution}
 
-\quad Our solution had several steps. First we preprocessed the data by importing and calculating an average value for each pixel. We normalized these values so that they fell between 0 and 1. We used a threshold value to discretize the pixel values. 0.4 was chosen somewhat arbitrarily, because it was the largest value that left each number as a single, connected figure. Pixel's above the threshold were set to 1 and pixels below to -1. We then transformed the $ 20\times20 $ pixel arrays into $ 400\times 1 $ pixel vectors. These average digits can be seen in figure 1. 
+\quad Our solution had several steps. First we preprocessed the data by importing and calculating an average value for each pixel. We normalized these values so that they fell between 0 and 1. We used a threshold value to discretize the pixel values. 0.4 was chosen somewhat arbitrarily, because it was the largest value that left each number as a single, connected figure. Pixels above the threshold were set to 1 and pixels below to -1. We then transformed the $ 20\times20 $ pixel arrays into $ 400\times 1 $ pixel vectors. These average digits can be seen in figure 1. 
 
 \begin{figure}[h]
 \centering
 \includegraphics[scale = 0.3]{AveragesNoThreshold}
 \includegraphics[scale = 0.3]{Averages}
-\caption{These shows the average values calculated for each digit, followed by the overall average. The left shows the calculated values and the right shows them after being discretized by a threshold value.}
+\caption{The average values calculated for each digit, followed by the overall average. The left shows the calculated values and the right shows them after being discretized by a threshold value.}
 \end{figure}
-Our first attempt at processing the data was to create a single Hopfield network and train it on the 10 image averages that we had calculated. This resulted in zero percent accuracy because a spurious minimum overpowered the trained patterns. These results can be seen in for ten random images in figure 2. The value they are converging to is the overall average of every training digit. This makes sense because the digits are relatively similar patterns, when too many are put into one net, they can collapse to an average. 
+Our first attempt at processing the data was to create a single Hopfield network and train it on the 10 image averages that we had calculated. This resulted in zero percent accuracy because a spurious minimum overpowered the trained patterns. These results can be seen in for ten random images in figure 2. The value they are converging to something similar to the overall average of every training digit. This makes sense because the digits are relatively similar patterns, when too many are put into one net, they can collapse to an average. 
 
 \begin{figure}[h]
 \centering
 %\includegraphics[scale = 0.3]{AllConvergeToAverage1}
 \includegraphics[scale = 0.3]{AllConvergeToAverage2}
-\caption{This shows ten random digits all converging to the same pattern. Investigation revealed that this pattern is the average of the individual digit patterns.}
+\caption{Ten random digits all converge to the same pattern. Investigation revealed that this pattern is the average of the individual digit patterns.}
 \end{figure}
 
 We then decided to try a different path. Rather than a single net that stores all the patterns, we would have multiple nets where each one was responsible for only two patterns. This method required $ \left(\begin{array}{c}
@@ -238,7 +235,7 @@ for iterations = 1:itrCount
 end
 \end{verbatim}
 \doublespacing
-\quad In \texttt{processInput.m} we capture describe how the Hopfield networks respond to stimulus. Before it is called a vector is assigned to \texttt{netNums}. In the bracket structure multiple networks are responding to the same stimulus at once; the digit they converge to determine which networks are selected for the next round. 
+\quad In \texttt{processInput.m} we describe how the Hopfield networks respond to stimulus. Before it is called, a vector is assigned to \texttt{netNums}. In the bracket structure multiple networks are responding to the same stimulus at once; the digit they converge to determine which networks are selected for the next round. 
 
 A single iteration involves choosing a neuron at random (\texttt{neuronNum}), then taking the inner product of the corresponding column in the \texttt{weights} matrix and the \texttt{neurons} vector, and finally passing that value through \texttt{biasFunc}. \texttt{biasFunc} is simply:
 \[ f(x) = \left\{\begin{array}{cc}
@@ -277,34 +274,42 @@ for resultsItr =netNums %netNums
 end
 \end{verbatim}
 \doublespacing
-\quad After the stable state for the neurons has been calculated, this routine determines which pattern each the net converges to. Because we chose to have an iteration count be our condition for convergence, the pattern may be off from the true average pattern by a few pixels. Even though our neuron vectors are ones and negative ones, rather than ones and zeros, we can still calculate what is effectively the Hamming Distance. Each net is only responsible for two patterns, however, when a pattern is trained in a Hopfield network, its inverse is also implicitly trained. Therefore, we have to check the distance for both the output to each pattern and the inverse of the output to each pattern. We take the pattern that had the minimum Hamming Distance of these four comparisons and set that as our result for that network. 
+\quad After the stable state for the neurons has been calculated, this routine determines which pattern each of the nets converges to. Because we chose to have an iteration count be our condition for convergence, the pattern may be off from the true average pattern by a few pixels. Even though our neuron vectors are ones and negative ones, rather than ones and zeros, we can still calculate what is effectively the Hamming Distance. Each net is only responsible for two patterns, however, when a pattern is trained in a Hopfield network, the inverse image is also implicitly trained. Therefore, we have to check the distance for both the output to each pattern and the inverse of the output to each pattern. We take the pattern that had the minimum Hamming Distance of these four comparisons and set that as our result for that network. 
 
 \section{Improvements}
-The goal of this project was to read individual numbers and classify them.  Naturally, given the limited scope of reading numbers, further improvement could be done to expand the scope of characters to include identifying letters as well.  At this point in time that would have proven too difficult to do with enough accuracy (especially given the similarities between some letters and numbers), but that would be a logical next step.  Due to the fact that this was intended to be a mathematical modeling project, we limited our source of images to be single letter images.  As stated earlier in the paper, we could provide more functionality by allow the images to be multiple digit numbers, with an added mechanism to divide up letters and then run each letter through our model.  As this is somewhat out of the purpose of our project, we chose not to implement this.  However, for purposes of fleshing out and making this project more applicable to the real world, this would be a very powerful improvement.
+The goal of this project was to read individual numbers and classify them.  Naturally, given the limited scope of reading numbers, we could further expand the classifier to identify letters as well.  At this point in time that would have proven too difficult to do with enough accuracy (especially given the similarities between some letters and numbers), but that would be a logical next step.  Due to the fact that this was intended to be a mathematical modeling project, we limited our source of images to be single letter images.  As stated earlier in the paper, we could provide more functionality by allowing the images to be multiple digit numbers, with an added mechanism to divide up letters and then run each letter through our model.  As this is somewhat out of the purpose of our project, we chose not to implement this.  However, for purposes of fleshing out and making this project more applicable to the real world, this would be a powerful improvement.
 
-In the realm of how we implement the project, several further improvements could be made. We could do some more pre-processing on the averages, perhaps by subtracting the average or a more complex operation like primary component analysis. Perhaps that would allow us to store more information is a single network. In regards to the network operation we could explore different methods for choosing which node fires. Finally, rather than organizing the networks into a bracket, we could explore applying them all to the input and taking ``votes'' from the results of each network. 
+In the realm of how we implement the project, several further improvements could be made. We could do some more pre-processing on the averages, perhaps by subtracting the average or a more complex operation like principal component analysis. Perhaps that would allow us to store more information is a single network. In regards to the network operation, we could explore different methods for choosing which node fires. Finally, rather than organizing the networks into a bracket, we could explore applying them all to the input and taking ``votes'' from the results of each network. 
 
 \section{Conclusion}
 
-While we did not achieve a high level of accuracy, we were able to provide a working implementation of Hopfield's neural network model. We verified that information can be stored in the weights of the networks and that it can be retrieved given certain stimuli. Spurious minima proved to be a significant issue which limited how many patterns could be trained into a network. Biological processes are not perfect and so we expected to deal with large inaccuracies when modeling the complex process of associative memory. While data processing accuracy was not the best, the Hopfield network displayed accurate representations of biological memories. The chief example of this is the blending of memories when faced with too many to differentiate. 
+While we did not achieve a high level of accuracy, we were able to provide a working implementation of Hopfield's neural network model. We verified that information can be stored in the weights of the networks and that it can be retrieved given certain stimuli. Spurious minima proved to be a significant issue which limited how many patterns could be trained into a network. Biological processes are not perfect and so we expected to deal with large inaccuracies when modeling the complex process of associative memory. While data processing accuracy was not the best, the Hopfield network displayed accurate representations of biological memories.
 
 \section{References}
-"Hopfield Networks." A Hopfield Net Example. Web. 09 Mar. 2016. 
+\hfil
 
+\hangindent=4em
+"Hopfield Networks." A Hopfield Net Example. Web. 09 Mar. 2016.
+ 
+\hangindent=4em
 DeKampfs, Mark. "Hopfield Networks." Hopfield Networks. Leeds University. Web. 09 Mar. 2016.
 
+\hangindent=4em
 "Notes on Neural Networks." Notes on Neural Networks. Web. 09 Mar. 2016.
 
+\hangindent=4em
 "Hopfield Network." A Simple Neural Network. Web. 09 Mar. 2016.
+Energy Landscape. Digital image. Energy Landscape. Wikipedia, n.d. Web. 9 Mar. 2016. 
+\verb|<https://en.wikipedia.org/|
+\verb|wiki/Hopfield_network#/media/File:Energy_landscape.png>|
 
-Energy Landscape. Digital image. Energy Landscape. Wikipedia, n.d. Web. 9 Mar. 2016. \begin{verbatim}
-<https://en.wikipedia.org/wiki/Hopfield_network#/media/File:Energy_landscape.png>
-\end{verbatim}
 
 \newpage
 
 \section{Appendix}
-Here we include scripts required to run the model, but that do not provide insight into the mathematical model. 
+Here we include scripts required to run the model, but that do not provide insight into the mathematical model. The can be accessed at \begin{verbatim}
+https://github.com/Kristjansson/HopfieldNet/
+\end{verbatim}
 \subsection{\texttt{main.m} }
 \singlespacing
 \begin{verbatim}
